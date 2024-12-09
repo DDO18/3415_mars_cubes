@@ -1,14 +1,21 @@
+from copy import copy
+
 from src.dice import Dice, DiceValues
 from src.player import Player
 
 
 class GameState:
+    NUMBER_OF_DICES = 13
 
-    def __init__ (self, players: list[Player], player: int, remaining_dice: list[str], chosen_dice: list[str]):
+    def __init__ (self, players: list[Player], player: int = 0, remaining_dice: list[str] = None, chosen_dice: list[str] = None):
         self.players = players
         self.player = player
-        self.remaining_dice = [Dice.load(dice) for dice in remaining_dice]
-        self.chosen_dice = [Dice.load(dice) for dice in chosen_dice]
+
+        if remaining_dice is None: self.remaining_dice = []
+        else: self.remaining_dice = [Dice.load(dice) for dice in remaining_dice]
+
+        if chosen_dice is None: self.chosen_dice = []
+        else: self.chosen_dice = [Dice.load(dice) for dice in chosen_dice]
 
     def __eq__(self, other):
         return(
@@ -46,18 +53,20 @@ class GameState:
         for dice in self.remaining_dice:
             dice.roll()
 
-    def prepare_new_round(self):
-        self.remaining_dice = [Dice('Ray') for _ in range(13)]
-        self.reroll()
+    def prepare_new_dices(self):
+        self.remaining_dice = [Dice() for _ in range(self.NUMBER_OF_DICES)]
         self.chosen_dice = []
 
+    def can_choose_dice(self, dice: Dice):
+        return dice not in self.chosen_dice or dice in [DiceValues.RAY, DiceValues.TANK]
+
     def choose_dice(self, dice: Dice):
-        if dice not in self.chosen_dice or dice in [DiceValues.RAY, DiceValues.TANK]:
-            dice_count = self.remaining_dice.count(dice)
-            while dice_count != 0:
-                self.chosen_dice.append(Dice(dice.value))
-                self.remaining_dice.remove(dice)
-                dice_count -= 1
+        assert(self.can_choose_dice(dice))
+        dice_count = self.remaining_dice.count(dice)
+        while dice_count != 0:
+            self.chosen_dice.append(copy(dice))
+            self.remaining_dice.remove(dice)
+            dice_count -= 1
 
     def add_score(self):
         rays = self.chosen_dice.count(DiceValues.RAY)
@@ -69,4 +78,6 @@ class GameState:
         if tanks > rays:
             return 0
 
-        return humans + cows + chickens + 3 * min(humans, chickens, cows, 1)
+        set_bonus = (3 if humans and chickens and cows else 0)
+
+        return humans + cows + chickens + set_bonus

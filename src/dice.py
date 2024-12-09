@@ -10,8 +10,11 @@ class DiceValues(enum.StrEnum):
 
 class Dice:
 
-    def __init__(self, value: DiceValues):
-        self.value = value
+    def __init__(self, value: DiceValues | None = None):
+        if value is None:
+            self.roll()
+        else:
+            self.value = value
 
     def __repr__(self):
         return f'{self.value.value}'

@@ -55,16 +55,14 @@ def test_load():
     assert game.save() == data
 
 def test_current_player():
-    game1 = GameState(players=players, remaining_dice=remaining_dice,
-                      chosen_dice=chosen_dice, player=1)
-    game2 = GameState(players=players, remaining_dice=remaining_dice,
-                      chosen_dice=chosen_dice, player=0)
+    game1 = GameState.load(data)
+    game2 = GameState.load(data)
+    game2.player = 0
     assert game1.current_player() == daniil
     assert game2.current_player() == alex
 
 def test_next_player():
-    game = GameState(players=players, remaining_dice=remaining_dice,
-                      chosen_dice=chosen_dice, player=1)
+    game = GameState.load(data)
     assert game.current_player() == daniil
 
     game.next_player()
@@ -72,8 +70,25 @@ def test_next_player():
     game.next_player()
     assert game.current_player() == daniil
 
+def test_prepare_new_dices():
+    game = GameState.load(data)
+    game.prepare_new_dices()
+    assert len(game.remaining_dice) == 13
+    assert len(game.chosen_dice) == 0
+
 def test_choose_dice():
-    pass
+    game = GameState.load(data)
+    game.choose_dice(Dice(DV.RAY))
+    assert game.remaining_dice == [Dice(DV.HUMAN), Dice(DV.TANK), Dice(DV.CHICKEN), Dice(DV.TANK), Dice(DV.COW)]
+    assert game.chosen_dice == [Dice(DV.RAY), Dice(DV.RAY), Dice(DV.COW), Dice(DV.COW),
+                                Dice(DV.COW), Dice(DV.TANK), Dice(DV.RAY), Dice(DV.RAY)]
 
 def test_add_score():
-    pass
+    game = GameState.load(data)
+    assert game.add_score() == 3
+
+    game.chosen_dice = [Dice(DV.HUMAN), Dice(DV.COW), Dice(DV.CHICKEN)]
+    assert game.add_score() == 6
+
+    game.chosen_dice.append(Dice(DV.TANK))
+    assert game.add_score() == 0

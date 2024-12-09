@@ -5,8 +5,6 @@ class Player:
     def __init__(self, name: str, score: int):
         self.name = name
         self.score = score
-        self.dices = ...
-        self.chosen = ...
 
     def __str__(self):
         return f'Игрок: {self.name}, Очки: {self.score}'
