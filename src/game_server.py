@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from src.dice import Dice, DiceValues as DV
 from src.player import Player
 from src.game_state import GameState
 from src.player_interaction import PlayerInteraction
@@ -121,13 +122,15 @@ class GameServer:
             try:
                 choice_dice = interaction.choose_dice(self.game_state.remaining_dice)
                 self.game_state.choose_dice(choice_dice)
+                if Dice(DV.TANK) in self.game_state.remaining_dice:
+                    self.game_state.choose_dice(DV.TANK)
+                self.game_state.reroll()
                 return GamePhase.CHOOSE_DICE
-            except ExceptionGroup:
+            except (AssertionError, ValueError):
                 continue
 
     def add_score_phase(self) -> GamePhase:
-        current_player = self.game_state.current_player()
-        self.player_types[current_player].score = self.game_state.add_score()
+        self.game_state.current_player().score += self.game_state.add_score()
         return GamePhase.NEXT_PLAYER
 
     def next_player(self) -> GamePhase:
